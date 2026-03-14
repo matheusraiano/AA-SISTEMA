@@ -16,8 +16,10 @@ O sistema utiliza um sensor ultrassônico montado em servos para realizar varred
 ## Estrutura do projeto
 
 AA-SISTEMA:
-    - V1.0 → Primeira versão funcional
-    - V1.1 → Tracking mais rápido, buzzer contínuo, laser com Serial
+
+- V1.0 → Primeira versão funcional
+
+- V1.1 → Tracking mais rápido, buzzer contínuo, laser com Serial
 
 ## Objetivo do projeto
 
