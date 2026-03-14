@@ -20,11 +20,6 @@ Quando um objeto é detectado dentro do limite definido, o sistema:
 3. Ajusta a altura da mira
 4. Aponta o laser para o alvo
 
-## Arquivo principal
-
-arduino/aa_sistema_v1.ino
-
-
 ## Status
 
 ✔ Funcional  
