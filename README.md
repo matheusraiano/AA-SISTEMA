@@ -16,16 +16,9 @@ O sistema utiliza um sensor ultrassônico montado em servos para realizar varred
 ## Estrutura do projeto
 
 AA-SISTEMA:
-    V1.0 → Primeira versão funcional
-    V1.1 → Tracking mais rápido, buzzer contínuo, laser com Serial
+    - V1.0 → Primeira versão funcional
+    - V1.1 → Tracking mais rápido, buzzer contínuo, laser com Serial
 
 ## Objetivo do projeto
 
 Estudo de sistemas de detecção, automação e controle utilizando Arduino.
-
-## Futuras melhorias
-
-- Radar visual no computador  
-- Detecção de múltiplos alvos em tempo real  
-- Torre independente do radar  
-- Sistema com múltiplos sensores
