@@ -10,41 +10,35 @@ const int echo = 8;
 const int laserPin = 6;
 const int buzzer = 5;
 
-/* ===== CONTROLE DE MOVIMENTO ===== */
-int angulo = 90;
-int direcao = 1;
-
-int ultimaAngulo = 90;
+/* ===== CONTROLE ===== */
+int anguloX = 90;       // posição servo horizontal
+int servoYPos = 90;     // posição servo vertical
 int ultimaDist = 0;
-
-int alvoDetectado = 0;
+bool alvoDetectado = false;
 
 /* ===== CONFIGURAÇÃO ===== */
-const int limiteDist = 150;      // Tracking só até 150 cm
+const int limiteDist = 30;   // alcance máximo do sonar (cm)
 const float suavizacao = 0.7;
-const float fatorPredicao = 0.5;
 
-/* ===== MULTI-ALVO ===== */
-const int MAX_ALVOS = 50;
-int alvosAngulo[MAX_ALVOS];
-int alvosDist[MAX_ALVOS];
-int contadorAlvos = 0;
+/* ===== RADAR ===== */
+const int centroRadarX = 90;  // ponto central horizontal
+const int passoMaxX = 6;      // passo máximo horizontal por ciclo
+const int passoMaxY = 4;      // passo máximo vertical por ciclo
+int direcaoX = 1;             // direção da patrulha horizontal
 
-/* ===== PREDIÇÃO APRIMORADA ===== */
-const int N = 5;
-int ultimosAngulos[N] = {90,90,90,90,90};
-int indice = 0;
+/* ===== GANHOS PROPORCIONAIS ===== */
+const float kP_X = 0.5;  // ganho proporcional horizontal
+const float kP_Y = 0.4;  // ganho proporcional vertical
 
 /* ===== SENSOR ===== */
 long medirDistancia(){
   long soma = 0;
-  for(int i=0;i<2;i++){ // menos leituras para acelerar
+  for(int i=0;i<2;i++){
     digitalWrite(trig, LOW);
     delayMicroseconds(2);
     digitalWrite(trig, HIGH);
     delayMicroseconds(10);
     digitalWrite(trig, LOW);
-
     long duracao = pulseIn(echo, HIGH, 20000);
     soma += duracao * 0.034 / 2;
     delay(2);
@@ -52,110 +46,90 @@ long medirDistancia(){
   return soma / 2;
 }
 
-/* ===== AVISO SONORO CONTÍNUO ===== */
+/* ===== BUZZER ===== */
 void avisoDistancia(int dist){
-  if(dist <= limiteDist){ // só se estiver dentro do limite do track
-    int freq = map(dist, limiteDist, 0, 500, 2000);   // mais perto = mais agudo
-    int duracao = map(dist, limiteDist, 0, 300, 50);  // mais perto = mais rápido
+  if(dist <= limiteDist){
+    int freq = map(dist, limiteDist, 0, 700, 2500);
+    int duracao = map(dist, limiteDist, 0, 200, 30);
     tone(buzzer, freq, duracao);
     delay(duracao);
   } else {
-    noTone(buzzer); // fora do alcance, sem som
+    noTone(buzzer);
   }
-}
-
-/* ===== MULTI-ALVO ===== */
-void registrarAlvo(int ang, int dist){
-  if(contadorAlvos < MAX_ALVOS){
-    alvosAngulo[contadorAlvos] = ang;
-    alvosDist[contadorAlvos] = dist;
-    contadorAlvos++;
-  }
-}
-void resetarAlvos(){
-  contadorAlvos = 0;
 }
 
 /* ===== SETUP ===== */
 void setup(){
   servoX.attach(9);
   servoY.attach(10);
-
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
   pinMode(laserPin, OUTPUT);
   pinMode(buzzer, OUTPUT);
-
+  digitalWrite(laserPin, LOW);
   Serial.begin(9600);
 }
 
-/* ===== LOOP PRINCIPAL ===== */
+/* ===== LOOP ===== */
 void loop(){
-  digitalWrite(laserPin, HIGH); // laser sempre ligado
+  // Medição do sonar
   int dist = medirDistancia();
-
-  /* Filtro suavização */
   ultimaDist = (ultimaDist * suavizacao) + (dist * (1 - suavizacao));
 
-  /* Aviso sonoro contínuo */
   avisoDistancia(ultimaDist);
 
-  /* Registrar alvo para mapa multi-alvo */
+  // detectar alvo mais próximo
   if(ultimaDist > 0 && ultimaDist <= limiteDist){
-    registrarAlvo(angulo, ultimaDist);
-    alvoDetectado = 1;
+    alvoDetectado = true;
+  } else {
+    alvoDetectado = false;
   }
 
-  /* ===== TRACKING ===== */
-  if(alvoDetectado && ultimaDist <= limiteDist){
-    /* Atualizar média móvel para predição */
-    ultimosAngulos[indice] = angulo;
-    indice = (indice + 1) % N;
+  if(alvoDetectado){
+    // --- TRACKING PROPORCIONAL AO SONAR ---
+    // Horizontal: centralizar alvo
+    int erroX = centroRadarX - anguloX;
+    int movimentoX = kP_X * erroX;
+    if(movimentoX > passoMaxX) movimentoX = passoMaxX;
+    if(movimentoX < -passoMaxX) movimentoX = -passoMaxX;
+    anguloX += movimentoX;
 
-    int soma = 0;
-    for(int i=0;i<N;i++) soma += ultimosAngulos[i];
-    int anguloPredito = soma / N;
+    // Vertical: proporcional à distância (apenas sobe se alvo mais próximo)
+    int alturaAlvo = map(ultimaDist, 0, limiteDist, 120, 60);
+    int erroY = alturaAlvo - servoYPos;
+    if(erroY > 0){
+      int movimentoY = kP_Y * erroY;
+      if(movimentoY > passoMaxY) movimentoY = passoMaxY;
+      servoYPos += movimentoY;
+    }
 
-    /* Passo de movimento baseado na distância */
-    int passo = map(ultimaDist, 0, limiteDist, 2, 6); // servo mais rápido
-    if(angulo < anguloPredito) angulo += passo;
-    if(angulo > anguloPredito) angulo -= passo;
+    servoX.write(anguloX);
+    servoY.write(servoYPos);
 
-    /* Controle vertical */
-    int altura = map(ultimaDist, 0, limiteDist, 60, 120);
-
-    servoX.write(angulo);
-    servoY.write(altura);
-
-    /* Disparo laser em alvo próximo */
-    if(ultimaDist <= 90){ // laser só dispara ≤90 cm
+    // --- ATAQUE LASER ---
+    if(ultimaDist <= 8){
       digitalWrite(laserPin, HIGH);
       delay(40);
       digitalWrite(laserPin, LOW);
       delay(40);
-      Serial.println("Laser disparado!"); // indica no Serial
+      Serial.println("Laser disparado!");
     }
 
-    if(ultimaDist >= limiteDist){
-      alvoDetectado = 0;
-      resetarAlvos(); // limpa multi-alvo
-    }
-  }
-  else{
-    servoX.write(angulo);
+  } else {
+    // patrulha horizontal suave
+    anguloX += passoMaxX * direcaoX;
+    if(anguloX >= 180) direcaoX = -1;
+    if(anguloX <= 0) direcaoX = 1;
+
+    servoX.write(anguloX);
     servoY.write(90);
-    angulo += direcao * 6; // patrulhamento mais rápido
-
-    if(angulo >= 180) direcao = -1;
-    if(angulo <= 0) direcao = 1;
   }
 
-  /* Enviar dados para Serial (radar) */
-  Serial.print("AnguloX:"); Serial.print(angulo);
-  Serial.print(", AnguloY:"); Serial.print(map(ultimaDist, 0, limiteDist, 60, 120));
+  // Serial
+  Serial.print("AnguloX:"); Serial.print(anguloX);
+  Serial.print(", AnguloY:"); Serial.print(servoYPos);
   Serial.print(", Distancia:"); Serial.print(ultimaDist);
-  Serial.print(", AlvoDetectado:"); Serial.print(alvoDetectado);
-  Serial.print(", ContadorAlvos:"); Serial.println(contadorAlvos);
+  Serial.print(", AlvoDetectado:"); Serial.println(alvoDetectado);
 
-  delay(10); // loop mais rápido
+  delay(10);
 }
