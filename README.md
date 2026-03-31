@@ -15,11 +15,24 @@ O sistema utiliza um sensor ultrassônico montado em servos para realizar varred
 
 ## Estrutura do projeto
 
-AA-SISTEMA:
+```
+AA-SISTEMA/
+├── V1.0/
+│   └── arduino/AA-SISTEMA-V1.0/
+├── V1.1/
+│   ├── arduino/AA-SISTEMA-V1.1/
+│   └── tinkercad/
+└── V2.0/
+    └── arduino/AA-SISTEMA-V2.0/
+```
+
+## Versões
+
 | Versão | Descrição |
-|---------|-----------|
+|--------|-----------|
 | V1.0 | Primeira versão funcional |
 | V1.1 | Tracking mais rápido, buzzer contínuo, laser com Serial |
+| V2.0 | Reescrita completa: máquina de estados, loop não-bloqueante, bugs corrigidos |
 
 ## Objetivo do projeto
 
