@@ -19,11 +19,20 @@ O sistema utiliza um sensor ultrassônico montado em servos para realizar varred
 AA-SISTEMA/
 ├── V1.0/
 │   └── arduino/AA-SISTEMA-V1.0/
+│   └── docs/
+│   └── tinkercad/
+│   └── README
 ├── V1.1/
 │   ├── arduino/AA-SISTEMA-V1.1/
+│   └── docs/
 │   └── tinkercad/
-└── V2.0/
-    └── arduino/AA-SISTEMA-V2.0/
+│   └── README
+├── V2.0/
+│   └── arduino/AA-SISTEMA-V2.0/
+│   └── README
+└── V2.1/
+│   └── arduino/AA-SISTEMA-V2.1/
+│   └── README
 ```
 
 ## Versões
@@ -33,6 +42,7 @@ AA-SISTEMA/
 | V1.0 | Primeira versão funcional |
 | V1.1 | Tracking mais rápido, buzzer contínuo, laser com Serial |
 | V2.0 | Reescrita completa: máquina de estados, loop não-bloqueante, bugs corrigidos |
+| V2.1 | Controle PID no eixo X, eliminação do tremor do servo |
 
 ## Objetivo do projeto
 
