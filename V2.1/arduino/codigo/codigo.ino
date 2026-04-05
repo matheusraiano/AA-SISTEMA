@@ -13,7 +13,7 @@ const int PIN_SERVO_X = 9;
 const int PIN_SERVO_Y = 10;
 
 // ===== LIMITES DO SISTEMA =====
-const int DIST_TRAVAR  = 20;
+const int DIST_TRAVAR  = 30;
 const int DIST_LASER   = 15;
 const int DIST_SONAR   = 200;
 
